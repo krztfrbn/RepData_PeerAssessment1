@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
@@ -15,7 +10,8 @@ Let's first load and transform the data. It contains a header so let's make sure
 
 Here's the code to do all this:
 
-```{r loading,echo=TRUE}
+
+```r
 activity <- read.csv("activity.csv",header=TRUE)
 activity$date <-as.Date(activity$date)
 activity$minute <- floor(activity$interval/100) * 60 + activity$interval%%100
@@ -25,46 +21,46 @@ activity$minute <- floor(activity$interval/100) * 60 + activity$interval%%100
 
 First let's calculate the total number of steps taken per day:
 
-```{r total_steps,echo=TRUE}
+
+```r
 total_steps <- aggregate(data=activity,steps~date,sum)
 ```
 
 Here's the code to create the histogram:
 
-```{r total_steps_histo_code,fig.height=4}
+
+```r
 library("ggplot2")
 p <- ggplot(data=total_steps, aes(x=date,y=steps)) + geom_histogram(stat="identity")
 ```
 
 And here's the histogram itself:
 
-```{r total_steps_histo,fig.height=4,echo=FALSE}
-p
-```
+![](PA1_template_files/figure-html/total_steps_histo-1.png) 
 
-The mean of total number of steps taken per day is `r mean(total_steps$steps, na.rm=TRUE)` and the median is `r median(total_steps$steps, na.rm=TRUE)`.
+The mean of total number of steps taken per day is 1.0766189\times 10^{4} and the median is 10765.
 
 
 ## What is the average daily activity pattern?
 
 For this task we need to group by 5-minute interval:
 
-```{r avrg_daily_act,echo=TRUE}
+
+```r
 avrg_daily_act <- aggregate(data=activity,steps~minute,mean)
 ```
 Here's the time series plot:
 
-```{r avrg_daily_act_plot,echo=FALSE}
-plot(avrg_daily_act, type="l", main="Average daily activity")
-```
+![](PA1_template_files/figure-html/avrg_daily_act_plot-1.png) 
 
-The highest average is `r max(avrg_daily_act$steps)` which happens at interval `r avrg_daily_act$minute[avrg_daily_act$steps==max(avrg_daily_act$steps)]`.
+The highest average is 206.1698113 which happens at interval 515.
 
 ## Imputing missing values
 
-Sadly our data is incomplete - there are `r sum(is.na(activity$steps)==TRUE)` measurements missing in our 'steps' column. Let's replace those missing values with the average value of that same 5-minute interval. To do so we create a vector of average 5-minute values equal in length to our original activity data. Then we replace all NAs with their average counterpart:
+Sadly our data is incomplete - there are 2304 measurements missing in our 'steps' column. Let's replace those missing values with the average value of that same 5-minute interval. To do so we create a vector of average 5-minute values equal in length to our original activity data. Then we replace all NAs with their average counterpart:
 
-```{r nas,echo=TRUE}
+
+```r
 avrg_steps <- avrg_daily_act$steps
 avrg_steps_long <- rep(avrg_steps,times=61)
 activity_nona <- activity
@@ -73,24 +69,24 @@ activity_nona$steps <- pmax(activity_nona$steps,avrg_steps_long,na.rm=TRUE)
 
 Here are the updated histogram and mean/median values:
 
-```{r total_steps_nona,echo=TRUE,fig.height=4}
+
+```r
 total_steps_nona <- aggregate(data=activity_nona,steps~date,sum)
 p <- ggplot(data=total_steps_nona, aes(x=date,y=steps)) + geom_histogram(stat="identity")
 ```
 
 And here's the histogram itself:
 
-```{r total_steps_nona_histo,fig.height=4,echo=FALSE}
-p
-```
+![](PA1_template_files/figure-html/total_steps_nona_histo-1.png) 
 
-The mean of total number of steps taken per day is now `r mean(total_steps_nona$steps)` and the median is now `r median(total_steps_nona$steps)`. Both mean and median are now significantly higher since we replaced the zero count for days without data with the average.
+The mean of total number of steps taken per day is now 1.7053994\times 10^{4} and the median is now 1.7355208\times 10^{4}. Both mean and median are now significantly higher since we replaced the zero count for days without data with the average.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 First we create a new column that's a factor indicating whether a given day is a weekday or weekend. Then we merge the "weekday" and "weekend" averages in a new dataframe that's conducive to lattice's xyplot() function.
 
-```{r weekday,echo=TRUE}
+
+```r
 activity_nona$tod <- as.factor(ifelse(weekdays(activity_nona$date)=="Saturday" | weekdays(activity_nona$date)=="Sunday", "weekend", "weekday"))
 a_weekend <- aggregate(data=subset(activity_nona, tod=="weekend"),steps~minute,mean)
 a_weekday <- aggregate(data=subset(activity_nona, tod=="weekday"),steps~minute,mean)
@@ -101,10 +97,7 @@ a_combo <- rbind(a_weekday,a_weekend)
 
 And here's the final plot:
 
-```{r weekday_plot,echo=FALSE}
-library(lattice)
-xyplot(steps~minute|tod,a_combo,type="l",layout=c(1,2))
-```
+![](PA1_template_files/figure-html/weekday_plot-1.png) 
 
 
 
